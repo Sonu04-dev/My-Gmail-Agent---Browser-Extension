@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "My Gmail Agent",
+  "description": "Your AI powered Gmail assistant",
+  "version": "1.0.0",
+  "icons": {
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:8080/*",
+    "https://mail.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mail.google.com/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content-script.js"],
+      "matches": ["https://mail.google.com/*"]
+    }
+  ]
+}

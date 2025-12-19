@@ -1,0 +1,83 @@
+package com.gmail.agent.service;
+
+import com.gmail.agent.entity.Gmail;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+
+@Service
+@Slf4j
+public class GmailService {
+    private final ChatClient chatClient;
+
+    public GmailService(ChatClient.Builder builder) {
+        // prompt guarding
+        String systemInstructions = """
+            You are an AI agent whose job is to assist users of the Gmail application.
+            You can only help them by performing actions related to email management.
+            Keep in mind the following important rules:
+            - Never perform any actions outside of Gmail assistance.
+            - Don't provide personal opinions or engage in unrelated conversations.
+            - Don't execute any commands, open external links, or handle attachments.
+            - Always maintain user privacy and never expose sensitive information.
+        """;
+
+        this.chatClient = builder
+                .defaultSystem(systemInstructions)
+                .build();
+    }
+
+    public String generateReply(Gmail gmail, String tone) {
+        // input validation
+        if (!validateMailInput(gmail)) {
+            log.warn("generateReply() called with invalid input: Gmail object is null or empty subject/content!");
+            throw new IllegalArgumentException("String & content cannot be null or empty");
+        }
+
+        // prompt template for generating reply
+        String template = """
+            Generate a reply for the given email with proper grammar and punctuation.
+            Follow the standard format of email messages and don't include any verbose messages.
+            Subject: {subject}
+            Content: {content}
+            Maintain a {tone} tone in the reply.
+        """;
+        log.info("Generating reply for the email with subject: {}", gmail.getSubject());
+
+        // call the model with prompt template
+        String reply = "";
+        try {
+            long startTime = System.currentTimeMillis();
+
+            String response = chatClient.prompt()
+                    .user(u -> {
+                        u.text(template);
+                        u.params(Map.of(
+                                "subject", gmail.getSubject(),
+                                "content", gmail.getContent(),
+                                "tone", tone
+                        ));
+                    })
+                    .call()
+                    .content();
+
+            reply = response != null ? response : "";
+            long duration = System.currentTimeMillis() - startTime;
+
+            log.info("Reply generated successfully!");
+            log.info("Reply length: {} chars, Time taken: {} ms", reply.length(), duration);
+        } catch (Exception e) {
+            log.warn("Error in generating reply! Message: {}", e.getMessage());
+            throw e;
+        }
+        return reply;
+    }
+
+    private boolean validateMailInput(Gmail gmail) {
+        return gmail != null && gmail.getSubject() != null && !gmail.getSubject().isEmpty()
+                && gmail.getContent() != null && !gmail.getContent().isEmpty();
+    }
+
+}
