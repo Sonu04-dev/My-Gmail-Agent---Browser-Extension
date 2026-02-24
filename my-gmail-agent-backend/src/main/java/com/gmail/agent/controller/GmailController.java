@@ -46,4 +46,16 @@ public class GmailController {
         }
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<String> smartSearch(@RequestParam String userQuery) {
+        try {
+            String standardQuery = gmailService.smartSearch(userQuery);
+            return new ResponseEntity<>(standardQuery, HttpStatus.OK);
+        } catch (TransientAiException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.TOO_MANY_REQUESTS);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
 }

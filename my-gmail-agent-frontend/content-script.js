@@ -6,7 +6,7 @@
   const FAB_ID = "myga-fab";
   
   // Valid tones for reply generation
-  const VALID_TONES = ["Formal", "Courteous", "Concise", "Casual", "Empathetic"];
+  const VALID_TONES = ["Formal", "Courteous", "Concise", "Casual", "Empathetic", "Rigid"];
 
   // Detect current Gmail context
   function detectContext() {
@@ -282,6 +282,7 @@
 
     createFloatingButton();
     createSidebar();
+    handleSearchLanding();
   }
 
   function createFloatingButton() {
@@ -377,15 +378,33 @@
             <button class="myga-icon-button" type="button" data-myga-action="close-sidebar" aria-label="Close sidebar">✕</button>
           </header>
 
+          <div id="myga-status-message" class="myga-status-message" style="display: none;"></div>
+
           <section class="myga-section">
             <h2 class="myga-section-title">Smart search</h2>
             <p class="myga-section-desc">
-              Find emails using natural language or AI-powered queries.
+              Describe what you're looking for. Our AI converts it to Gmail search.
             </p>
-            <div class="myga-info-box">
-              <span class="myga-badge-coming-soon">COMING SOON</span>
-              <p class="myga-info-text">This feature is coming soon. Stay tuned!</p>
+
+            <!-- Search input -->
+            <div class="myga-field-group">
+              <label class="myga-label" for="myga-search-input">Search query</label>
+              <div class="myga-search-input-wrapper">
+                <input 
+                  type="text" 
+                  id="myga-search-input" 
+                  class="myga-search-input" 
+                  placeholder="e.g., emails from John about the project..."
+                  aria-label="Search emails"
+                />
+                <button class="myga-search-clear-btn" type="button" id="myga-search-clear" aria-label="Clear search">✕</button>
+              </div>
             </div>
+
+            <!-- Search button -->
+            <button class="myga-primary-button" type="button" id="myga-search-button">
+              🔍 Search
+            </button>
           </section>
         </div>
       `;
@@ -424,6 +443,23 @@
       if (target.id === "myga-summarize-button") {
         handleSummarizeThread();
       }
+
+      // Handle smart search button
+      if (target.id === "myga-search-button") {
+        handleSmartSearch();
+      }
+
+      // Handle search clear button
+      if (target.id === "myga-search-clear") {
+        const searchInput = document.getElementById("myga-search-input");
+        if (searchInput) {
+          searchInput.value = "";
+          searchInput.focus();
+          target.style.display = "none";
+        }
+      }
+
+
 
     });
 
@@ -664,6 +700,149 @@
       showStatusMessage(`Error: ${errorMessage}`, "error");
     }
   }
+
+  // ===== Smart Search Feature =====
+
+  // Handler for smart search
+  async function handleSmartSearch() {
+    try {
+      const searchInput = document.getElementById("myga-search-input");
+      const query = searchInput ? searchInput.value.trim() : "";
+
+      if (!query) {
+        showStatusMessage("Please enter a search query", "error");
+        return;
+      }
+
+      const searchButton = document.getElementById("myga-search-button");
+      searchButton.disabled = true;
+      searchButton.textContent = "Searching...";
+      showStatusMessage("Converting to Gmail search...", "info");
+
+      console.log("Natural language query:", query);
+
+      // Ask background to convert the natural language query to Gmail syntax
+      const converted = await callConvertQueryAPI(query);
+
+      // Use converted query (fallback to original if missing)
+      const gmailQuery = converted.convertedQuery || query;
+
+      // Show success message before navigation
+      showStatusMessage("✓ Search executed! Navigating to Gmail...", "success");
+
+      // Persist converted + original queries across navigation so we can show results after Gmail loads
+      try {
+        sessionStorage.setItem('myga_converted_query', gmailQuery);
+        sessionStorage.setItem('myga_original_query', query);
+        sessionStorage.setItem('myga_converted_at', new Date().toISOString());
+      } catch (e) {
+        // sessionStorage may be unavailable in some contexts; ignore silently
+        console.warn('Unable to persist converted query in sessionStorage', e);
+      }
+
+      // Small delay to show the success message before navigating away
+      setTimeout(() => {
+        performGmailSearch(gmailQuery);
+      }, 500);
+
+      searchButton.disabled = false;
+      searchButton.textContent = "🔍 Search";
+    } catch (error) {
+      console.error("Smart search error:", error);
+      showStatusMessage(`Error: ${error.message}`, "error");
+      const searchButton = document.getElementById("myga-search-button");
+      searchButton.disabled = false;
+      searchButton.textContent = "🔍 Search";
+    }
+  }
+
+  // Call background to convert natural language query to Gmail syntax
+  function callConvertQueryAPI(query) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (typeof chrome === 'undefined' || !chrome.runtime) {
+          reject(new Error("Chrome runtime is not available. Extension may not be properly initialized."));
+          return;
+        }
+
+        chrome.runtime.sendMessage({ action: "convertQuery", query: query }, (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (!response) {
+            reject(new Error("No response from background script."));
+            return;
+          }
+          if (response.success) {
+            resolve(response);
+          } else {
+            reject(new Error(response.error || "Unknown error from background script."));
+          }
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  // Perform search in Gmail inbox
+  function performGmailSearch(query) {
+    // Gmail search syntax: Use the search box
+    // We'll navigate to Gmail's search page with the query
+    const encodedQuery = encodeURIComponent(query);
+    const searchUrl = `https://mail.google.com/mail/u/0/#search/${encodedQuery}`;
+    
+    // Open search in current window or new tab
+    window.location.href = searchUrl;
+  }
+
+
+  // Handle landing on Gmail search page after navigation from smart search
+  async function handleSearchLanding() {
+    try {
+      // Only run on Gmail search pages
+      if (!location.hash.startsWith('#search/')) return;
+
+      const converted = sessionStorage.getItem('myga_converted_query');
+      const original = sessionStorage.getItem('myga_original_query');
+      if (!converted) return;
+
+      showStatusMessage(`✓ Search applied! Query: ${original}`, 'success');
+
+      // Clean up stored queries
+      try {
+        sessionStorage.removeItem('myga_converted_query');
+        sessionStorage.removeItem('myga_original_query');
+        sessionStorage.removeItem('myga_converted_at');
+      } catch (e) {}
+    } catch (err) {
+      console.error('handleSearchLanding error:', err);
+    }
+  }
+
+  // Add input event listener for search input (for showing/hiding clear button)
+  document.addEventListener("input", (event) => {
+    if (event.target && event.target.id === "myga-search-input") {
+      const searchInput = event.target;
+      const clearBtn = document.getElementById("myga-search-clear");
+      if (clearBtn) {
+        clearBtn.style.display = searchInput.value.length > 0 ? "flex" : "none";
+      }
+    }
+  });
+
+  // Add keydown listener for Enter key in search input
+  document.addEventListener("keydown", (event) => {
+    if (event.target && event.target.id === "myga-search-input" && event.key === "Enter") {
+      event.preventDefault();
+      const searchButton = document.getElementById("myga-search-button");
+      if (searchButton) {
+        searchButton.click();
+      }
+    }
+  });
+
 
   // Gmail is an SPA; run on initial load and when the URL changes
   let lastUrl = location.href;

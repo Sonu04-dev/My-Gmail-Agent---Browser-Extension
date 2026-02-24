@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -127,6 +128,58 @@ public class GmailService {
     private boolean validateMailInput(Gmail gmail) {
         return gmail != null && gmail.getSubject() != null && !gmail.getSubject().isEmpty()
                 && gmail.getContent() != null && !gmail.getContent().isEmpty();
+    }
+
+    public String smartSearch(String userQuery) {
+        // Prompt template to generate standard Gmail search query from natural language of user query
+        String template = """
+            Convert the user query in natural language into a valid Gmail search query.
+            Output ONLY the search query. NO verbose texts.
+            Use the following keywords for Gmail search with proper syntax as appropriate.
+            
+            Address filters- from:, to:, cc:, bcc:
+            Content filters- subject:, AROUND, AND, OR
+            Date filters- after:, before:, older:, newer:, older_than:, newer_than:
+            Location filters- in:inbox, in:sent, in:spam, in:trash etc.
+            Category filters- category:primary, category:social, category:promotions etc.
+            Label filters- label:
+            Attachment filters- filename:pdf, filename:xlsx, has:attachment, has:youtube etc.
+            Status filters- is:unread, is:starred, is:important
+            Size filters- size:, larger:, smaller:
+            Mailing lists- list:
+            
+            Use only those operators that match the user intent. Remove duplicates. Quote names if needed.
+            Normalize the dates given that the current timestamp is: {currentTime}
+            User query: {userQuery}
+        """;
+
+        String standardQuery = "";
+        try {
+            long startTime = System.currentTimeMillis();
+
+            String response = chatClient.prompt()
+                    .user(u -> {
+                        u.text(template);
+                        u.params(Map.of(
+                                "userQuery", userQuery,
+                                "currentTime", LocalDateTime.now()
+                        ));
+                    })
+                    .call()
+                    .content();
+
+            standardQuery = response != null ? response : "";
+            long duration = System.currentTimeMillis() - startTime;
+
+            log.info("User Query : {}", userQuery);
+            log.info("Standard Query : {}", standardQuery);
+            log.info("Search query generated successfully!");
+            log.info("Query length: {} chars, Time taken: {} ms", standardQuery.length(), duration);
+        } catch (Exception e) {
+            log.warn("Error in generating search query! Message: {}", e.getMessage());
+            throw e;
+        }
+        return standardQuery;
     }
 
 }

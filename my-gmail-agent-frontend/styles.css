@@ -512,6 +512,140 @@
   border: 1px solid #fca5a5;
 }
 
+/* ===== Smart Search Styles ===== */
+
+/* Search input wrapper */
+.myga-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Search input field */
+.myga-search-input {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
+  border: 1px solid var(--myga-border-subtle);
+  border-radius: 8px;
+  font-family: var(--myga-font-family);
+  font-size: 13px;
+  color: var(--myga-text-main);
+  background: var(--myga-bg);
+  transition:
+    border-color 0.2s var(--myga-ease),
+    box-shadow 0.2s var(--myga-ease);
+}
+
+.myga-search-input:hover {
+  border-color: var(--myga-border-strong);
+  background: var(--myga-bg-elevated);
+}
+
+.myga-search-input:focus {
+  outline: none;
+  border-color: var(--myga-primary);
+  box-shadow: 0 0 0 3px var(--myga-primary-soft);
+}
+
+.myga-search-input::placeholder {
+  color: var(--myga-text-muted);
+  opacity: 0.8;
+}
+
+/* Clear button for search input */
+.myga-search-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--myga-text-muted);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  padding: 0;
+  transition:
+    color 0.2s var(--myga-ease),
+    background 0.2s var(--myga-ease);
+}
+
+.myga-search-clear-btn:hover {
+  color: var(--myga-text-main);
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 4px;
+}
+
+/* Filter grid for checkboxes */
+.myga-filter-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Checkbox label */
+.myga-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition:
+    background 0.2s var(--myga-ease);
+  user-select: none;
+}
+
+.myga-checkbox-label:hover {
+  background: var(--myga-primary-soft);
+}
+
+.myga-checkbox-label span {
+  font-size: 13px;
+  color: var(--myga-text-main);
+}
+
+/* Checkbox input */
+.myga-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--myga-primary);
+}
+
+/* Info box styles (for badges, etc.) */
+.myga-info-box {
+  padding: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.05);
+  margin: 8px 0;
+}
+
+.myga-badge-coming-soon {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e40af;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.myga-info-text {
+  font-size: 12px;
+  color: #1e40af;
+  margin: 0;
+}
+
 /* Micro-interactions */
 .myga-card:hover {
   transform: translateY(-4px);
