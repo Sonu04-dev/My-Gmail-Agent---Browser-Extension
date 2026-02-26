@@ -98,12 +98,14 @@
 
 .myga-sidebar-inner {
   padding: var(--myga-spacing-lg);
-  padding-top: calc(var(--myga-spacing-lg) + 6px);
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--myga-spacing-md);
   background: transparent;
+  overflow-y: auto;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Header */
@@ -112,12 +114,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 12px;
+  padding-left: var(--myga-spacing-lg);
+  padding-right: var(--myga-spacing-lg);
+  margin: 0;
   border-radius: 12px;
   /* colorful Google-like gradient (blue -> soft blue -> red) */
   background: var(--myga-accent-gradient);
   color: #ffffff;
   border: none;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .myga-header-title {
@@ -451,41 +457,41 @@
 
 /* Info Box */
 .myga-info-box {
-  margin-top: 8px;
-  padding: 10px 12px;
-  border-radius: var(--myga-radius-md);
-  background: rgba(249, 250, 251, 0.92);
-  border: 1px dashed rgba(148, 163, 184, 0.7);
-  text-align: center;
+  padding: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.05);
+  margin: 8px 0;
 }
 
 .myga-badge-coming-soon {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: var(--myga-radius-pill);
-  background: linear-gradient(135deg, var(--g-yellow), #f59e0b);
-  color: #111827;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  box-shadow: none;
+  color: #1e40af;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
 .myga-info-text {
-  margin: 6px 0 0 0;
-  font-size: 11px;
-  color: #64748b;
-  line-height: 1.4;
+  font-size: 12px;
+  color: #1e40af;
+  margin: 0;
 }
 
 /* Status Messages */
 .myga-status-message {
-  margin: 0 0 10px 0;
+  margin: var(--myga-spacing-md) 0;
   padding: 10px 12px;
   border-radius: var(--myga-radius-md);
   font-size: 11px;
   line-height: 1.4;
   display: none;
+  flex-shrink: 0;
 }
 
 .myga-status-info {
@@ -619,32 +625,7 @@
 }
 
 /* Info box styles (for badges, etc.) */
-.myga-info-box {
-  padding: 12px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 8px;
-  background: rgba(59, 130, 246, 0.05);
-  margin: 8px 0;
-}
-
-.myga-badge-coming-soon {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  color: #1e40af;
-  background: rgba(59, 130, 246, 0.1);
-  padding: 3px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-}
-
-.myga-info-text {
-  font-size: 12px;
-  color: #1e40af;
-  margin: 0;
-}
+/* Moved to main section above */
 
 /* Micro-interactions */
 .myga-card:hover {

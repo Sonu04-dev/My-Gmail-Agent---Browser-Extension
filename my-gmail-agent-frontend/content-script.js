@@ -379,7 +379,7 @@
           </header>
 
           <div id="myga-status-message" class="myga-status-message" style="display: none;"></div>
-
+          <div class="myga-scrollable-content">
           <section class="myga-section">
             <h2 class="myga-section-title">Smart search</h2>
             <p class="myga-section-desc">
@@ -406,12 +406,12 @@
               🔍 Search
             </button>
           </section>
+          </div>
         </div>
       `;
     }
 
-    sidebar.innerHTML = contentHTML;
-
+    sidebar.innerHTML = contentHTML;    
     sidebar.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
@@ -422,14 +422,14 @@
 
       // Handle tone selection
       if (target.classList.contains("myga-chip") && target.dataset.tone) {
-        const toneButtons = document.querySelectorAll("#myga-tone-selector .myga-chip");
+        const toneButtons = sidebar.querySelectorAll("#myga-tone-selector .myga-chip");
         toneButtons.forEach(btn => btn.classList.remove("myga-chip--selected"));
         target.classList.add("myga-chip--selected");
       }
 
       //Handle summary style selection
       if (target.classList.contains("myga-chip") && target.dataset.style) {
-        const styleButtons = document.querySelectorAll("#myga-summary-style-selector .myga-chip");
+        const styleButtons = sidebar.querySelectorAll("#myga-summary-style-selector .myga-chip");
         styleButtons.forEach((btn) => btn.classList.remove("myga-chip--selected"));
         target.classList.add("myga-chip--selected");
       }
@@ -458,9 +458,6 @@
           target.style.display = "none";
         }
       }
-
-
-
     });
 
     document.body.appendChild(sidebar);

@@ -6,12 +6,15 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.List;
 
 @Service
 @Slf4j
 public class GmailService {
     private final ChatClient chatClient;
+    private final int MAX_INPUT_CHARS = 4000;
 
     public GmailService(ChatClient.Builder builder) {
         // prompt guarding
@@ -51,6 +54,7 @@ public class GmailService {
         // call the model with prompt template
         String reply = "";
         try {
+            String content = limitContent(gmail);
             long startTime = System.currentTimeMillis();
 
             String response = chatClient.prompt()
@@ -58,7 +62,7 @@ public class GmailService {
                         u.text(template);
                         u.params(Map.of(
                                 "subject", gmail.getSubject(),
-                                "content", gmail.getContent(),
+                                "content", content,
                                 "tone", tone
                         ));
                     })
@@ -75,6 +79,31 @@ public class GmailService {
             throw e;
         }
         return reply;
+    }
+
+    private String limitContent(Gmail gmail) {
+        String content = gmail.getContent();
+        if (content.length() <= MAX_INPUT_CHARS) {
+            return content;
+        }
+
+        List<String> chunkSummaries = new ArrayList<>();
+
+        for (int start = 0; start < content.length(); start += MAX_INPUT_CHARS) {
+            int end = Math.min(start + MAX_INPUT_CHARS, content.length());
+            Gmail chunk = new Gmail();
+            chunk.setSubject(gmail.getSubject());
+            chunk.setContent(content.substring(start, end));
+
+            String summary = generateSummary(chunk, "BULLET POINTS");
+            chunkSummaries.add(summary);
+        }
+
+        Gmail merged = new Gmail();
+        merged.setSubject(gmail.getSubject());
+        merged.setContent(String.join("\n\n", chunkSummaries));
+
+        return generateSummary(merged, "SHORT");
     }
 
     public String generateSummary(Gmail gmail, String style) {
